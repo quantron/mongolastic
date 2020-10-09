@@ -1,0 +1,69 @@
+version: "3.4"
+
+x-mongo-base:
+  &mongo-base
+  image: mongo:4.4
+  entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "fango-mongo-set" ]
+
+x-node-base:
+  &node-base
+  image: node:12
+  volumes:
+    - nodemodules:/usr/src/connector/node_modules
+    - ./config.ci.json:/srv/connector/config.local.json
+    - .:/srv/connector
+  working_dir: /srv/connector
+
+services:
+  # fango-mongo-rs2:
+  #   << : *mongo-base
+  #   hostname: fango-mongo-rs2
+  #   container_name: fango-mongo-rs2
+  #   ports:
+  #     - 27019:27017
+  # fango-mongo-rs1:
+  #   hostname: fango-mongo-rs1
+  #   << : *mongo-base
+  #   container_name: fango-mongo-rs1
+  #   ports:
+  #     - 27018:27017
+  fango-mongo-rs0:
+    << : *mongo-base
+    container_name: fango-mongo-rs0
+    healthcheck:
+        test: test $$(echo "rs.initiate().ok || rs.status().ok" | mongo --quiet) -eq 1 # initiates replSet
+        interval: 10s
+        start_period: 30s
+    ports:
+      - 27017:27017
+
+  elastic:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.9.0
+    container_name: fango-elastic
+    ports:
+      - 9200
+    environment:
+      - discovery.type=single-node
+      - cluster.name=docker-cluster
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - cluster.routing.allocation.disk.threshold_enabled=false
+
+  install:
+    << : *node-base
+    command: npm i
+  typecheck:
+    << : *node-base
+    command: npm run typecheck
+  spellcheck:
+    << : *node-base
+    command: npm run spellcheck
+  lint:
+    << : *node-base
+    command: npm run lint
+  test:
+    << : *node-base
+    command: npm run test
+
+volumes:
+  nodemodules:
+

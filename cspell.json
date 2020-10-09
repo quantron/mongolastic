@@ -1,0 +1,60 @@
+{
+    "language": "en",
+    "dictionaryDefinitions": [
+        {
+            "name": "russian",
+            "file": "./node_modules/cspell-dict-russian/Russian.trie.gz",
+            "description": "Russian Dictionary"
+          }
+    ],
+    "ignorePaths": ["node_modules/**", "**/data/**", "**/b12/**", "**/mappings/configuration.ts", "tests/fixtures/**"],
+    "dictionaries": [
+        "russian"
+    ],
+    "words": [
+        "quantron",
+        "jsonb",
+        "autocommit",
+        "btree",
+        "umzug",
+        "ilike",
+        "polyfill",
+        "fkey",
+        "APPURLSCHEMA",
+        "vkontakte",
+        "odnoklassniki",
+        "googleplay",
+        "appstore",
+        "upsert",
+        "upserted",
+        "papaparse",
+        "selectel",
+        "quantrontest",
+        "unzipper",
+        "xmldatafeed",
+        "exceljs",
+        "postgres",
+        "corejs",
+        "plpgsql",
+        "ossp",
+        "nextval",
+        "varchar",
+        "lpad",
+        "promisify",
+        "bson",
+        "callbackify",
+        "xmlbuilder",
+        "androidrx",
+        "tsvector",
+        "tsquery",
+        "datetime",
+        "inet",
+        "plainto",
+        "onced",
+        "illan",
+        "arraybuffer",
+        "watcher",
+        "translit",
+        "errored"
+    ]
+  }
