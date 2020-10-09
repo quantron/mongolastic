@@ -1,0 +1,29 @@
+{
+  "mongo": {
+    "options": {
+      "poolSize": 100
+    },
+    "connectionOptions": {
+      "useUnifiedTopology": true
+    },
+    "connectionUrl": "localhost:27017",
+    "database": "test",
+    "collections": ["products", "categories", "attributes"]
+  },
+  "elasticsearch": {
+    "namespace": "fango",
+    "connectionOptions": {
+      "node": "http://localhost:9200"
+    },
+    "elasticRotationIntervalMs": 30000
+  },
+  "mappings": {
+    "categories": "../mappings/categories",
+    "products": "../mappings/products",
+    "attributes": "../mappings/attributes"
+  },
+  "bulkSize": 1000,
+  "ignoreResumeTokensOnStart": false,
+  "resumeTokenInterval": 30000,
+  "resumeTokenCollection": "connector"
+}

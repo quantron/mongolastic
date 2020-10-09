@@ -1,0 +1,13 @@
+src/
+tests/
+tarballs/
+.eslintignore
+.eslintrc*
+.gitignore
+.gitlab-ci.yml
+config.ci.json
+config.local.json
+cspell.json
+docker-compose*
+Makefile
+tsconfig*

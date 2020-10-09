@@ -1,0 +1,78 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (C) 2008 Quantron Systems LLC.
+//  All Rights Reserved.
+//
+//  This file is part of the Private project.
+//  For conditions of distribution and use,
+//  please contact sales@quantron-systems.com
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// @filename: ./translit.d.ts
+import _ from 'lodash';
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// substrings with larger length goes at first due to #translit implementation
+const enChars = [
+    // cspell: disable-next-line
+    'shh',
+    'yo',
+    'zh',
+    'x',
+    'ch',
+    'sh',
+    '``',
+    'y`',
+    'e`',
+    'yu',
+    'ya',
+    ...'abvgdezijklmnoprstufc`'.split('')
+];
+const ruChars = [
+    // cspell: disable-next-line
+    'щ',
+    'ё',
+    'ж',
+    'кс',
+    'ч',
+    'ш',
+    'ъ',
+    'ы',
+    'э',
+    'ю',
+    'я',
+    ...'абвгдезийклмнопрстуфць'.split('')
+];
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+if(enChars.length !== ruChars.length) {
+    throw new Error(
+        `libs / translit: expected enChars.length (${enChars.length}) to equal ruChars.length (${ruChars.length})`
+    );
+}
+
+const enCharsMap = _.reduce(enChars, (accumulator, char, index) => _.assign(accumulator, {[char]: ruChars[index]}), {});
+const ruCharsMap = _.reduce(ruChars, (accumulator, char, index) => _.assign(accumulator, {[char]: enChars[index]}), {});
+
+const enCharsRegexp = new RegExp(`${enChars.join('|')}`, 'gi');
+const ruCharsRegexp = new RegExp(`${ruChars.join('|')}`, 'gi');
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function translit(source, regexp, charMap) {
+    return _.replace(_.toLower(source), regexp, (str) => charMap[str] || str);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function translitRuEn(source) {
+    return translit(source, ruCharsRegexp, ruCharsMap);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function translitEnRu(source) {
+    return translit(source, enCharsRegexp, enCharsMap);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+export {translitEnRu, translitRuEn};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

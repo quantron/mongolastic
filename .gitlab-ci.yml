@@ -1,0 +1,22 @@
+test:
+  stage: test
+  before_script:
+    - docker volume create nodemodules
+    - docker-compose up --build -d
+  script:
+    - mkdir logs
+    - docker-compose run install
+    - docker-compose run lint
+    - docker-compose run typecheck
+    - docker-compose run spellcheck
+    - docker-compose run test
+  after_script:
+    - docker-compose -f ./docker-compose.yml down -v
+    - docker volume rm -f nodemodules
+  artifacts:
+    when: always
+    paths:
+      - logs/
+    expire_in: 1 week
+  tags:
+    - ubuntu

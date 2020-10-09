@@ -1,0 +1,20 @@
+{
+  "mongo": {
+    "options": {
+      "poolSize": 100
+    },
+    "connectionOptions": {
+      "useUnifiedTopology": true
+    },
+    "connectionUrl": "fango-mongo-rs0:27017",
+    "database": "test",
+    "collections": ["products", "categories", "attributes"]
+  },
+  "elasticsearch": {
+    "namespace": "test",
+    "connectionOptions": {
+      "node": "http://fango-elastic:9200"
+    },
+    "elasticRotationIntervalMs": 300
+  }
+}
