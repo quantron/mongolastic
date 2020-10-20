@@ -10,8 +10,9 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 import _ from 'lodash';
+import {Collection} from 'mongodb';
 import {charFilter, filters, analyzers} from './configuration';
-import {Attribute} from './types';
+import {MongoAttribute, ElasticAttribute} from './types';
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const properties = {
@@ -37,13 +38,13 @@ const properties = {
                 analyzer: 'russianSimple'
             },
             isLuxe: {type: 'boolean'},
-            created: {type: 'date', format: 'YYYY-MM-DD HH:mm:ss.SSS'},
-            modified: {type: 'date', format: 'YYYY-MM-DD HH:mm:ss.SSS'}
+            created: {type: 'date'},
+            modified: {type: 'date'}
         }
     },
     order: {type: 'keyword'},
-    created: {type: 'date', format: 'YYYY-MM-DD HH:mm:ss.SSS'},
-    modified: {type: 'date', format: 'YYYY-MM-DD HH:mm:ss.SSS'}
+    created: {type: 'date'},
+    modified: {type: 'date'}
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -63,11 +64,22 @@ export default {
             char_filter: charFilter
         }
     },
-    transformFunc: ({_id, values, ...attribute}: Attribute): Attribute => ({
-        ...attribute,
-        _id: _id.toString(),
-        values: _.map(values, (value) => ({...value, _id: value._id.toString()}))
-    }),
+    transformFunc: (
+        {_id, values, created, modified, ...attribute}: MongoAttribute,
+        collection: Collection,
+        callback: (error: Error | null, elasticDoc: ElasticAttribute) => void
+    ): void =>
+        callback(null, {
+            ...attribute,
+            created: new Date(created).toJSON(),
+            modified: new Date(modified).toJSON(),
+            values: _.map(values, ({_id, created, modified, ...value}) => ({
+                ...value,
+                _id: _id.toString(),
+                created: new Date(created).toJSON(),
+                modified: new Date(modified).toJSON()
+            }))
+        }),
     versionField: 'modified'
 };
 

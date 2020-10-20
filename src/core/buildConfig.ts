@@ -9,22 +9,27 @@
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+import fs from 'fs';
 import path from 'path';
 import qs, {ParsedUrlQueryInput} from 'querystring';
 import _ from 'lodash';
 import bluebird from 'bluebird';
-import {MongoClientOptions} from 'mongodb';
+import {MongoClientOptions, Collection} from 'mongodb';
 import {ClientOptions as ElasticClientOptions} from '@elastic/elasticsearch';
 import {get as getSettings} from '../b12/settings';
 import logger from '../b12/logger';
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 export interface Mapping {
-    mapping: {
+    mappings: {
         properties: Record<string, unknown>;
     };
     settings: Record<string, unknown>;
-    transformFunc: <MongoDoc, ElasticDoc>(mongoDoc: MongoDoc) => ElasticDoc;
+    transformFunc: <MongoDoc, ElasticDoc>(
+        mongoDoc: MongoDoc,
+        collection: Collection,
+        callback: (error: Error | null, elasticDoc: ElasticDoc) => void
+    ) => void;
     versionField: string;
 }
 
@@ -50,7 +55,14 @@ export interface Config {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-async function buildConfig(): Promise<Config> {
+async function buildConfig(customConfigPath: string | null): Promise<Config> {
+    let settingsInConfig = getSettings();
+    if(customConfigPath && fs.existsSync(customConfigPath)) {
+        const customConfigData = fs.readFileSync(customConfigPath, 'utf8');
+        const customConfig = JSON.parse(customConfigData) as typeof settingsInConfig;
+        _.defaultsDeep(customConfig, settingsInConfig);
+        settingsInConfig = customConfig;
+    }
     const {
         bulkSize = 1000,
         mappings: mappingPaths,
@@ -59,7 +71,7 @@ async function buildConfig(): Promise<Config> {
         resumeTokenCollection = 'connector',
         ignoreResumeTokensOnStart = false,
         mongo
-    } = getSettings();
+    } = settingsInConfig;
 
     const mongoUrl = _.compact([
         'mongodb://',
@@ -75,7 +87,7 @@ async function buildConfig(): Promise<Config> {
     const mappings = await bluebird.props(
         _.mapValues(
             mappingPaths,
-            mappingPath => import(path.resolve(__dirname, mappingPath)).then(module => module.default) // eslint-disable-line
+      (mappingPath) => import(path.resolve(__dirname, mappingPath)).then((module) => module.default) // eslint-disable-line
         )
     );
     logger.verbose('buildConfig(): config successfully built');

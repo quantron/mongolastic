@@ -49,6 +49,8 @@ class CollectionWatcher {
 
     readonly elastic: ElasticManager;
 
+    readonly indexName: string;
+
     readonly mapping: Mapping;
 
     readonly collectionName: string;
@@ -61,9 +63,11 @@ class CollectionWatcher {
 
     protected changeStream?: ChangeStream<DefaultMongoDoc>;
 
-    readonly transform: (inputDoc: DefaultMongoDoc) => DefaultElasticDoc;
-
-    readonly indexName: string;
+    readonly transform: (
+        inputDoc: DefaultMongoDoc,
+        collection: Collection,
+        callback: (error: Error | null, elasticDoc: DefaultElasticDoc) => void
+    ) => void;
 
     constructor(
         {mapping, collectionName, collection, elastic, mongo, resumeToken, indexName}: Container,
@@ -100,7 +104,7 @@ class CollectionWatcher {
 
                 if(resumeToken) this.resumeToken?.setToken(resumeToken);
 
-                logger.info(`CollectionWatcher(${this.collectionName}).on(delete) - ${JSON.stringify(change)}`);
+                logger.info(`CollectionWatcher(${this.collectionName}).on(delete)`);
 
                 void this.elastic.deleteDoc({_id: _id.toHexString(), indexName: this.indexName});
 
@@ -115,19 +119,35 @@ class CollectionWatcher {
                     documentKey: {_id},
                     operationType
                 } = change;
-                const elasticDoc = this.transform(fullDocument as DefaultMongoDoc);
-                const {versionField} = this.mapping;
 
-                if(resumeToken) this.resumeToken?.setToken(resumeToken);
-                logger.info(`CollectionWatcher(${this.collectionName}).on(${operationType}) - ${JSON.stringify(change)}`);
+                if(!fullDocument) {
+                    logger.error(`CollectionWatcher(${this.collectionName}).on(update): found no fullDocument ${JSON.stringify(change, null, 2)}`);
+                    break;
+                }
 
-                this.elastic.insertDoc({
-                    indexName: this.indexName,
-                    _id: _id.toString(),
-                    dateString: elasticDoc[versionField] as string,
-                    doc: elasticDoc
+                logger.info(`CollectionWatcher(${this.collectionName}).on(${operationType}) - ${JSON.stringify({_id, operationType}, null, 2)}`);
+
+                this.transform(fullDocument, this.collection, (error, elasticDoc) => {
+                    if(error) {
+                        logger.error(
+                            `CollectionWatcher(${
+                                this.collectionName
+                            }).on(${operationType}) error transforming doc - ${error.toString()}`
+                        );
+                    } else {
+                        const {versionField} = this.mapping;
+
+                        if(resumeToken) this.resumeToken?.setToken(resumeToken);
+
+                        this.elastic.insertDoc({
+                            indexName: this.indexName,
+                            _id: _id.toString(),
+                            dateString: elasticDoc[versionField] as string,
+                            doc: elasticDoc
+                        });
+                    }
                 });
-                return;
+                break;
             }
             default: {
                 logger.warn(`CollectionWatcher.${this.collectionName} unknown event - ${JSON.stringify(change)}`);
@@ -196,7 +216,7 @@ class CollectionWatcher {
         if(ignoreResumeToken) {
             await this.resumeToken?.reset();
         }
-        await bluebird.each(this.classModifiers, operation => operation());
+        await bluebird.each(this.classModifiers, (operation) => operation());
 
         const token = await this.resumeToken?.read();
 

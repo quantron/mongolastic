@@ -16,8 +16,9 @@ import {start as startWatching} from '../core';
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 commander
     .description('CLI utility for mongo-elastic synchronization using mongo change-streams')
-    .action((cmdObject) => {
-        startWatching()
+    .option('-c, --config [path]', 'provide custom config file')
+    .action((cmdObject: commander.Command) => {
+        startWatching(cmdObject.config)
             .then(() => {
                 console.info('Listening started.');
             })

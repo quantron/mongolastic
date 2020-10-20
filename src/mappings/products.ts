@@ -11,6 +11,7 @@
 
 import _ from 'lodash';
 import fp from 'lodash/fp';
+import {Collection} from 'mongodb';
 import {translitEnRu} from '../b12/translit';
 import {MongoProduct, ElasticProduct} from './types';
 import {charFilter, filters, analyzers} from './configuration';
@@ -34,6 +35,7 @@ const productProperties = {
             attributeId: {type: 'keyword'},
             attributeValue: {type: 'keyword'},
             attributeName: {type: 'keyword'},
+            attributeType: {type: 'keyword'},
             attributeDisplayValue: {type: 'text', analyzer: 'russianSimple'}
         }
     },
@@ -52,21 +54,22 @@ const productProperties = {
     supplierId: {type: 'keyword'},
     categoryId: {type: 'keyword'},
     subCategoryId: {type: 'keyword'},
-    created: {type: 'date', format: 'YYYY-MM-DD HH:mm:ss.SSS'},
-    modified: {type: 'date', format: 'YYYY-MM-DD HH:mm:ss.SSS'}
+    created: {type: 'date'},
+    modified: {type: 'date'}
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-const transformFunc = (product: MongoProduct): ElasticProduct => {
+const transformFunc = (
+    product: MongoProduct,
+    collection: Collection<MongoProduct>,
+    callback: (error: Error | null, elasticDoc?: ElasticProduct) => void
+): void => {
     const isLatin = (str: string) => /['a-z']/i.test(_.toLower(str));
 
-    const attributes = _.flatMap(
-        product.attributes,
-        ({attributeType, attributeDisplayValue}) =>
-            (attributeType === 'brand' && isLatin(attributeDisplayValue)
-                ? [attributeDisplayValue, translitEnRu(attributeDisplayValue)]
-                : [attributeDisplayValue])
-    );
+    const attributes = _.flatMap(product.attributes, ({attributeType, attributeDisplayValue}) =>
+        (attributeType === 'brand' && isLatin(attributeDisplayValue)
+            ? [attributeDisplayValue, translitEnRu(attributeDisplayValue)]
+            : [attributeDisplayValue]));
 
     const search = _.flow(
         ({name}) => [..._.split(name, /[ ,.]/), ...attributes],
@@ -75,14 +78,14 @@ const transformFunc = (product: MongoProduct): ElasticProduct => {
         fp.lowerCase
     )(product);
 
-    return {
+    return callback(null, {
         name: product.name,
         description: product.description,
         attributes: product.attributes,
         search,
         status: product.status,
         cityId: product.cityId.toString(),
-        areaId: product.cityId.toString(),
+        areaId: product.areaId.toString(),
         condition: product.condition,
         clientId: product.clientId.toString(),
         priceRub: product.priceRub,
@@ -91,9 +94,9 @@ const transformFunc = (product: MongoProduct): ElasticProduct => {
         supplierId: product.supplierId,
         categoryId: product.categoryId.toString(),
         subCategoryId: product.subCategoryId.toString(),
-        created: product.created,
-        modified: product.modified
-    };
+        created: new Date(product.created).toJSON(),
+        modified: new Date(product.modified).toJSON()
+    });
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -127,7 +127,7 @@ class ElasticManager {
     readonly namespace: string;
 
     protected async sendBulkRequest(operations: Operation[]): Promise<void> {
-        logger.verbose(`ElasticConnector.sendBulkRequest: processing ${JSON.stringify(operations)}`);
+        logger.verbose(`ElasticConnector.sendBulkRequest: processing ${operations.length} operations`);
         if(_.isEmpty(operations)) return;
         try {
             const {body: responseBody} = await this.client.bulk<BulkResponse, any>({refresh: false, body: operations});
@@ -171,7 +171,7 @@ class ElasticManager {
         logger.verbose(`ElasticConnector: built connection using ${JSON.stringify(elasticClientOpts)}`);
     }
 
-    public async createIndexIfNotExists(indexName: string, {mapping, settings}: Mapping): Promise<this> {
+    public async createIndexIfNotExists(indexName: string, {mappings, settings}: Mapping): Promise<this> {
         const {body: isIndexExists} = await this.client.indices.exists({index: indexName});
         if(isIndexExists) {
             logger.info(`elastic.createIndexIfNotExists(): index ${indexName} already exists`);
@@ -180,7 +180,7 @@ class ElasticManager {
         await this.client.indices.create({
             index: indexName,
             body: {
-                mappings: mapping,
+                mappings,
                 settings
             }
         });
@@ -188,13 +188,13 @@ class ElasticManager {
         return this;
     }
 
-    private async getExistingDoc({indexName, _id}: {indexName: string, _id: string}): Promise<number | undefined> {
+    public async getExistingDoc({indexName, _id}: {indexName: string, _id: string}): Promise<GetResponse | undefined> {
         try {
             const doc = await this.client.get<GetResponse>({
                 index: indexName,
                 id: _id
             });
-            return doc.body._version;
+            return doc.body;
         } catch(err) {
             logger.error(`cannot find item ${JSON.stringify({indexName, _id})}`);
         }
@@ -216,14 +216,14 @@ class ElasticManager {
     }
 
     public async deleteDoc({_id, indexName}: MongoDeleteParams): Promise<void> {
-        const version = await this.getExistingDoc({indexName, _id});
-        if(!version) return;
+        const existingDoc = await this.getExistingDoc({indexName, _id});
+        if(!existingDoc?._version) return;
 
         this.operations.push({
             delete: {
                 _index: indexName,
                 _id,
-                version: versioning.incrementVersionForDeletion(version),
+                version: versioning.incrementVersionForDeletion(existingDoc._version),
                 version_type: 'external'
             }
         });

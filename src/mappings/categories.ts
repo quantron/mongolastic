@@ -9,6 +9,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+import {Collection} from 'mongodb';
 import {charFilter, filters, analyzers} from './configuration';
 import {MongoCategory, ElasticCategory} from './types';
 
@@ -33,8 +34,8 @@ const categoryProperties = {
     order: {type: 'keyword'},
     isTop: {type: 'boolean'},
     isVisible: {type: 'boolean'},
-    created: {type: 'date', format: 'YYYY-MM-DD HH:mm:ss.SSS'},
-    modified: {type: 'date', format: 'YYYY-MM-DD HH:mm:ss.SSS'}
+    created: {type: 'date'},
+    modified: {type: 'date'}
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -54,11 +55,25 @@ export default {
             char_filter: charFilter
         }
     },
-    transformFunc: (category: MongoCategory): ElasticCategory => ({
-        ...category,
-        _id: category._id.toString(),
-        parentId: category.parentId.toString()
-    }),
+    transformFunc: (
+        {_id, created, modified, ...category}: MongoCategory,
+        collection: Collection<MongoCategory>,
+        callback: (error: Error | null, elasticDoc?: ElasticCategory) => void
+    ): void => {
+        const data = {
+            ...category,
+            created: new Date(created).toJSON(),
+            modified: new Date(modified).toJSON(),
+            parentId: category.parentId.toString()
+        };
+        if(!category.parentId) return callback(null, {...data, fullName: category.name});
+        collection.findOne({_id: category.parentId}, {projection: ['name']}, (error, result) => {
+            if(error) return callback(error);
+            const {name: parentName = ''} = result || {};
+            const fullName = `${parentName}${parentName ? ` ${category.name}` : category.name}`;
+            return callback(null, {...data, fullName});
+        });
+    },
     versionField: 'modified'
 };
 
