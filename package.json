@@ -1,28 +1,32 @@
 {
   "name": "quant-connect",
-  "version": "0.0.1",
-  "description": "> TODO: description",
+  "version": "0.0.2",
+  "description": "simple utility to synchonize mongo and elastic",
   "scripts": {
     "typecheck": "npx tsc -p ./tsconfig.dev.json --noEmit",
-    "prepublishOnly": "npm run clean && npm run lint && npm run typecheck && npm run test",
     "clean": "rimraf dist",
     "build": "npm run clean && tsc -p ./tsconfig.prod.json",
-    "lint": "node ./node_modules/eslint/bin/eslint.js --ext .ts --ext .js .",
+    "lint": "node ./node_modules/eslint/bin/eslint.js --ext .ts --ext .js ./src",
     "spellcheck": "cspell '**/*.ts'",
-    "start:dev": "node ./node_modules/ts-node/dist/bin.js --project ./tsconfig.dev.json src/bin/connector.ts",
-    "start": "node ./node_modules/ts-node/dist/bin.js dist/bin/connector.js",
-    "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\"}' TS_NODE_PROJECT='./tsconfig.dev.json' TZ=UTC npx mocha -r ts-node/register -b --timeout 100000 --exit 'tests/**/*.ts'"
+    "start:dev": "TZ=UTC node ./node_modules/ts-node/dist/bin.js --project ./tsconfig.dev.json src/bin/connector.ts",
+    "start": "TZ=UTC node dist/bin/connector.js",
+    "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\"}' TS_NODE_PROJECT='./tsconfig.dev.json' TZ=UTC npx mocha -r ts-node/register -b --timeout 100000 --exit 'tests/**/*.ts'",
+    "buildPacket": "npm run build && npm pack && mv *.tgz ./tarballs/*.tgz"
   },
+  "bin": {
+    "quant-connect": "./dist/bin/connector.js"
+  },
+  "main": "./dist/core/index.js",
   "author": "Quantron-Systems",
   "license": "ISC",
   "dependencies": {
     "@elastic/elasticsearch": "^7.9.0",
     "bluebird": "^3.7.2",
-    "bottlejs": "^2.0.0",
-    "bson": "^4.1.0",
     "commander": "^6.1.0",
     "lodash": "^4.17.20",
     "mongodb": "^3.6.1",
+    "rimraf": "^3.0.2",
+    "tslib": "^2.0.3",
     "winston": "^2.4.5"
   },
   "devDependencies": {
@@ -45,7 +49,7 @@
     "should": "^13.2.3",
     "ts-node": "^9.0.0",
     "ts-node-dev": "^1.0.0-pre.62",
-    "typescript": "^4.0.2"
+    "typescript": "^4.0.3"
   },
   "homepage": "",
   "directories": {

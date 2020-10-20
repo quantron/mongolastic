@@ -33,7 +33,7 @@ services:
     container_name: fango-elastic
     network_mode: host
     ports:
-      - 9200
+      - 9200:9200
     environment:
       - discovery.type=single-node
       - cluster.name=docker-cluster

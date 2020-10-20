@@ -1,7 +1,5 @@
-src/
 tests/
 tarballs/
-docker/
 .eslintignore
 .eslintrc*
 .gitignore
@@ -11,4 +9,6 @@ config.local.json
 cspell.json
 docker-compose*
 Makefile
-tsconfig*
+tsconfig.dev.json
+package-lock.json
+node_modules

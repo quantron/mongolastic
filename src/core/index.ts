@@ -9,6 +9,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+import path from 'path';
 import buildConfig from './buildConfig';
 import MongoManager from './mongoManager';
 import ElasticManager from './elasticManager';
@@ -18,8 +19,8 @@ import Connector from './connector';
 let connector: Connector;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-const start = async(): Promise<void> => {
-    const config = await buildConfig();
+const start = async(customConfigPath?: string): Promise<void> => {
+    const config = await buildConfig(customConfigPath ? path.resolve(process.cwd(), customConfigPath) : null);
     const mongo = new MongoManager(config);
     const elastic = new ElasticManager(config);
     connector = new Connector({config, mongo, elastic});
@@ -30,8 +31,7 @@ const start = async(): Promise<void> => {
         .buildCollectionWatchers()
         .start();
 
-    process.on('SIGTERM', () => {
-        console.info('SIGTERM signal received.');
+    const exitGracefully = () =>
         connector
             .stop()
             .then(() => {
@@ -42,59 +42,34 @@ const start = async(): Promise<void> => {
                 console.error(`Process exited with error - ${error.toString()}`);
                 process.exit(1);
             });
-    });
 
-    process.on('SIGINT', () => {
-        console.info('SIGINT signal received.');
-        connector
-            .stop()
-            .then(() => {
-                console.info('Process exited gracefully');
-                process.exit(0);
-            })
-            .catch((error: Error) => {
-                console.error(`Process exited with error - ${error.toString()}`);
-                process.exit(1);
-            });
-    });
+    process
+        .on('SIGTERM', () => {
+            console.info('SIGTERM signal received.');
+            void exitGracefully();
+        })
+        .on('SIGINT', () => {
+            console.info('SIGINT signal received.');
+            void exitGracefully();
+        })
 
-    process.on('uncaughtException', (error) => {
-        console.error(`uncaughtException received - ${error.toString()}.`);
-        connector
-            .stop()
-            .then(() => {
-                console.info('Process exited gracefully');
-                process.exit(0);
-            })
-            .catch((error: Error) => {
-                console.error(`Process exited with error - ${error.toString()}`);
-                process.exit(1);
-            });
-    });
+        .on('uncaughtException', error => {
+            console.error(`uncaughtException received - ${error.toString()}.`);
+            console.error(error);
+            void exitGracefully();
+        })
 
-    process.on('unhandledRejection', (error) => {
-        console.error('unhandledRejection received');
-        if(error) console.error(error);
-        connector
-            .stop()
-            .then(() => {
-                console.info('Process exited gracefully');
-                process.exit(0);
-            })
-            .catch((error: Error) => {
-                console.error(`Process exited with error - ${error.toString()}`);
-                process.exit(1);
-            });
-    });
+        .on('unhandledRejection', error => {
+            console.error('unhandledRejection received');
+            console.error(error);
+            void exitGracefully();
+        });
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const stop = (): Promise<Connector | void> => connector?.stop();
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-export {
-    start,
-    stop
-};
+export {start, stop};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

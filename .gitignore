@@ -15,4 +15,4 @@ webpack-assets.json
 .DS_Store
 backend/.import
 .nvmrc
-.dist
+dist/

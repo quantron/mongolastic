@@ -8,11 +8,12 @@
 //  please contact sales@quantron-systems.com
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 import {ObjectId} from 'mongodb';
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-export type AttributeValue = {
-    _id: ObjectId | string;
+export type MongoAttributeValue = {
+    _id: ObjectId;
     value: string;
     displayValue: string;
     description: string;
@@ -22,15 +23,39 @@ export type AttributeValue = {
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-export type Attribute = {
-    _id: ObjectId | string;
+export type ElasticAttributeValue = {
+    _id: string;
+    value: string;
+    displayValue: string;
+    description: string;
+    isLuxe: false;
+    modified: string;
+    created: string;
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+export type ElasticAttribute = {
     isVisible: boolean;
     type: string;
     name: string;
     fullName: string;
     description: string;
     order: string;
-    values: AttributeValue[];
+    values: ElasticAttributeValue[];
+    created: string;
+    modified: string;
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+export type MongoAttribute = {
+    _id: ObjectId;
+    isVisible: boolean;
+    type: string;
+    name: string;
+    fullName: string;
+    description: string;
+    order: string;
+    values: MongoAttributeValue[];
     created: string;
     modified: string;
 };
@@ -128,11 +153,11 @@ export type MongoCategory = {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 export type ElasticCategory = {
-    _id: string;
     isVisible: boolean;
     isTop: boolean;
     attributes: CategoryAttribute[];
     name: string;
+    fullName: string;
     parentId: string;
     order: string;
     description: string;
