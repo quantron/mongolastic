@@ -1,14 +1,8 @@
-tests/
+docker
 tarballs/
-.eslintignore
-.eslintrc*
-.gitignore
-.gitlab-ci.yml
 config.ci.json
 config.local.json
-cspell.json
 docker-compose*
 Makefile
-tsconfig.dev.json
 package-lock.json
 node_modules

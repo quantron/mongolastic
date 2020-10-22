@@ -5,11 +5,11 @@ test:
     - docker-compose up --build -d
   script:
     - mkdir logs
-    - docker-compose run install
-    - docker-compose run lint
-    - docker-compose run typecheck
-    - docker-compose run spellcheck
-    - docker-compose run test
+    - docker-compose exec -T app sh -c '/wait'
+    - docker-compose exec -T app npm run lint
+    - docker-compose exec -T app npm run typecheck
+    - docker-compose exec -T app npm run spellcheck
+    - docker-compose exec -T app npm run test
   after_script:
     - docker-compose -f ./docker-compose.yml down -v
     - docker volume rm -f nodemodules
