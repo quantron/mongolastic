@@ -27,6 +27,7 @@ export type ElasticAttributeValue = {
     _id: string;
     value: string;
     displayValue: string;
+    displayValueTranslit: string;
     description: string;
     isLuxe: false;
     modified: string;
