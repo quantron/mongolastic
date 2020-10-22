@@ -1,6 +1,6 @@
 {
   "name": "quant-connect",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "simple utility to synchonize mongo and elastic",
   "scripts": {
     "typecheck": "npx tsc -p ./tsconfig.dev.json --noEmit",
