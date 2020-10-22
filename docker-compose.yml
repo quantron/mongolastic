@@ -5,15 +5,6 @@ x-mongo-base:
   image: mongo:4.4
   entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "fango-mongo-set" ]
 
-x-node-base:
-  &node-base
-  image: node:12
-  volumes:
-    - nodemodules:/usr/src/connector/node_modules
-    - ./config.ci.json:/srv/connector/config.local.json
-    - .:/srv/connector
-  working_dir: /srv/connector
-
 services:
   # fango-mongo-rs2:
   #   << : *mongo-base
@@ -48,22 +39,14 @@ services:
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - cluster.routing.allocation.disk.threshold_enabled=false
 
-  install:
-    << : *node-base
-    command: npm i
-  typecheck:
-    << : *node-base
-    command: npm run typecheck
-  spellcheck:
-    << : *node-base
-    command: npm run spellcheck
-  lint:
-    << : *node-base
-    command: npm run lint
-  test:
-    << : *node-base
-    command: npm run test
-
-volumes:
-  nodemodules:
-
+  app:
+    container_name: app
+    build:
+      context: .
+      dockerfile: ./docker/development.dockerfile
+    environment:
+      WAIT_HOSTS: fango-mongo-rs0:27017, fango-elastic:9200
+    volumes:
+      - ./config.ci.json:/usr/src/app/config.local.json
+    tty: true
+    stdin_open: true

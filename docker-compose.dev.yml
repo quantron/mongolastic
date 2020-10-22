@@ -7,18 +7,6 @@ x-mongo-base:
   entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "fango-mongo-set" ]
 
 services:
-  # fango-mongo-rs2:
-  #   << : *mongo-base
-  #   hostname: fango-mongo-rs2
-  #   container_name: fango-mongo-rs2
-  #   ports:
-  #     - 27019:27017
-  # fango-mongo-rs1:
-  #   hostname: fango-mongo-rs1
-  #   << : *mongo-base
-  #   container_name: fango-mongo-rs1
-  #   ports:
-  #     - 27018:27017
   fango-mongo-rs0:
     << : *mongo-base
     container_name: fango-mongo-rs0
