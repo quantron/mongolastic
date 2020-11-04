@@ -10,7 +10,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 import _ from 'lodash';
-import bluebird from 'bluebird';
 import {Collection, ChangeStream, ObjectId, ChangeEvent, MongoError} from 'mongodb';
 import logger from '../b12/logger';
 import ResumeTokenManager from './resumeToken';
@@ -23,10 +22,9 @@ interface Container {
     mapping: Mapping;
     collectionName: string;
     elastic: ElasticManager;
-    collection?: Collection;
     mongo: MongoConnector;
-    resumeToken?: ResumeTokenManager;
     indexName: string;
+    resumeTokenCollectionName: string;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -41,12 +39,7 @@ type DefaultElasticDoc = {
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-type ClassModifier = () => void | Promise<unknown>;
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CollectionWatcher {
-    protected classModifiers: ClassModifier[];
-
     readonly elastic: ElasticManager;
 
     readonly indexName: string;
@@ -59,7 +52,7 @@ class CollectionWatcher {
 
     readonly collection: Collection;
 
-    public resumeToken?: ResumeTokenManager;
+    public resumeToken: ResumeTokenManager;
 
     protected changeStream?: ChangeStream<DefaultMongoDoc>;
 
@@ -69,19 +62,18 @@ class CollectionWatcher {
         callback: (error: Error | null, elasticDoc: DefaultElasticDoc) => void
     ) => void;
 
-    constructor(
-        {mapping, collectionName, collection, elastic, mongo, resumeToken, indexName}: Container,
-        classModifiers?: ClassModifier[]
-    ) {
-        this.collection = collection || mongo.db.collection(collectionName);
+    constructor({mapping, collectionName, resumeTokenCollectionName, elastic, mongo, indexName}: Container) {
+        this.collection = mongo.db.collection(collectionName);
         this.collectionName = collectionName;
         this.mongo = mongo;
         this.mapping = mapping;
         this.elastic = elastic;
-        this.resumeToken = resumeToken;
-        this.classModifiers = classModifiers || [];
         this.indexName = indexName;
         this.transform = mapping.transformFunc;
+        this.resumeToken = new ResumeTokenManager({
+            collectionName,
+            storageCollection: this.mongo.db.collection(resumeTokenCollectionName)
+        });
     }
 
     private onChange = (change: ChangeEvent<DefaultMongoDoc>): void => {
@@ -102,7 +94,7 @@ class CollectionWatcher {
                     documentKey: {_id}
                 } = change;
 
-                if(resumeToken) this.resumeToken?.setToken(resumeToken);
+                if(resumeToken) this.resumeToken.setToken(resumeToken);
 
                 logger.info(`CollectionWatcher(${this.collectionName}).on(delete)`);
 
@@ -125,7 +117,7 @@ class CollectionWatcher {
                     break;
                 }
 
-                logger.info(`CollectionWatcher(${this.collectionName}).on(${operationType}) - ${JSON.stringify({_id, operationType}, null, 2)}`);
+                // logger.info(`CollectionWatcher(${this.collectionName}).on(${operationType}) - ${JSON.stringify({_id, operationType}, null, 2)}`);
 
                 this.transform(fullDocument, this.collection, (error, elasticDoc) => {
                     if(error) {
@@ -173,7 +165,6 @@ class CollectionWatcher {
     public async restartWatching({ignoreResumeToken}: {ignoreResumeToken: boolean}): Promise<this> {
         await this.removeChangeStream();
         if(ignoreResumeToken) await this.resumeToken?.reset();
-        this.classModifiers = [];
         return this.watch();
     }
 
@@ -183,28 +174,13 @@ class CollectionWatcher {
             this.changeStream?.removeAllListeners(listener);
         });
         delete this.changeStream;
-        await this.resumeToken?.upsertIfExists();
+        await this.resumeToken.upsertIfExists();
     }
 
-    public buildToken(resumeTokenCollectionName: string): CollectionWatcher {
-        const operation = (): void => {
-            this.resumeToken = new ResumeTokenManager({
-                collectionName: this.collectionName,
-                storageCollection: this.mongo.db.collection(resumeTokenCollectionName)
-            });
-        };
-        this.classModifiers.push(operation);
-        return this;
-    }
-
-    public createElasticIndex(): CollectionWatcher {
-        const operation = () => {
-            const {elastic, indexName, mapping} = this;
-            return elastic.createIndexIfNotExists(indexName, mapping);
-        };
-        this.classModifiers.push(operation);
-        return this;
-    }
+    public createElasticIndex = async(): Promise<void> => {
+        const {elastic, indexName, mapping} = this;
+        await elastic.createIndexIfNotExists(indexName, mapping);
+    };
 
     // these are overloads
     async watch(): Promise<this>;
@@ -216,8 +192,6 @@ class CollectionWatcher {
         if(ignoreResumeToken) {
             await this.resumeToken?.reset();
         }
-        await bluebird.each(this.classModifiers, (operation) => operation());
-
         const token = await this.resumeToken?.read();
 
         this.changeStream = this.collection

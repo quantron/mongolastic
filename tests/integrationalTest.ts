@@ -23,7 +23,7 @@ import {MongoProduct} from '../src/mappings/types';
 
 import {get as getSettings} from '../src/b12/settings';
 import getProducts from './fixtures/products';
-import {start, stop} from '../src/core';
+import {start, stop} from '../src';
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 type Token = {
