@@ -40,7 +40,7 @@ class ResumeTokenManager {
     }
 
     public setToken(token: ResumeToken): void {
-        logger.debug(`ResumeToken(${this.watchingCollectionName}) - setting token ${JSON.stringify(token)}`);
+        // logger.debug(`ResumeToken(${this.watchingCollectionName}) - setting token ${JSON.stringify(token)}`);
         this.token = token;
     }
 

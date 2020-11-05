@@ -1,6 +1,6 @@
 {
-  "name": "quant-connect",
-  "version": "0.0.3",
+  "name": "@quantron/connector",
+  "version": "0.0.4",
   "description": "simple utility to synchonize mongo and elastic",
   "scripts": {
     "typecheck": "npx tsc -p ./tsconfig.dev.json --noEmit",
@@ -16,11 +16,12 @@
   "bin": {
     "quant-connect": "./dist/bin/connector.js"
   },
-  "main": "./dist/core/index.js",
+  "main": "./dist/index.js",
   "author": "Quantron-Systems",
   "license": "ISC",
   "dependencies": {
     "@elastic/elasticsearch": "^7.9.0",
+    "async": "^3.2.0",
     "bluebird": "^3.7.2",
     "commander": "^6.1.0",
     "lodash": "^4.17.20",
@@ -30,6 +31,7 @@
     "winston": "^2.4.5"
   },
   "devDependencies": {
+    "@types/async": "^3.2.3",
     "@types/bluebird": "^3.5.32",
     "@types/lodash": "^4.14.161",
     "@types/mocha": "^8.0.3",

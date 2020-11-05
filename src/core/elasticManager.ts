@@ -11,6 +11,7 @@
 
 import _ from 'lodash';
 import {ClientOptions, Client} from '@elastic/elasticsearch';
+import async, {AsyncCargo, ErrorCallback} from 'async';
 import logger from '../b12/logger';
 import * as versioning from './versioning';
 import {Mapping} from './buildConfig';
@@ -116,24 +117,23 @@ export interface GetResponse {
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ElasticManager {
-    readonly bulkSize: number;
-
-    readonly interval: NodeJS.Timeout;
-
-    private operations: Operation[] = [];
+    readonly cargo: AsyncCargo;
 
     readonly client: Client;
 
     readonly namespace: string;
 
-    protected async sendBulkRequest(operations: Operation[]): Promise<void> {
+    protected sendBulkRequest = (operations: Operation[], callback: ErrorCallback): void => {
         logger.verbose(`ElasticConnector.sendBulkRequest: processing ${operations.length} operations`);
-        if(_.isEmpty(operations)) return;
-        try {
-            const {body: responseBody} = await this.client.bulk<BulkResponse, any>({refresh: false, body: operations});
-            const {errors, items} = responseBody;
 
-            if(!errors) return;
+        this.client.bulk<BulkResponse, any>({refresh: false, body: operations}, (error, result) => {
+            if(error) {
+                logger.error('elasticConnector.sendBulkRequest:', error);
+                return callback(error);
+            }
+            const {body: responseBody} = result;
+            const {errors, items} = responseBody;
+            if(!errors) return callback();
             const erroredDocuments: ErroredDocument[] = [];
             // The items array has the same order of the dataset we just indexed.
             // The presence of the `error` key indicates that the operation
@@ -155,20 +155,19 @@ class ElasticManager {
             logger.error(
                 `elasticConnector.sendBulkRequest(): erroredDocuments - ${JSON.stringify(erroredDocuments, null, 2)}`
             );
-        } catch(error) {
-            logger.error('elasticConnector.sendBulkRequest:', error);
-        }
-    }
+            return callback();
+        });
+    };
 
-    constructor({bulkSize, elasticNamespace, elasticClientOpts, elasticRotationIntervalMs}: ElasticSettings) {
-        this.bulkSize = bulkSize;
+    constructor({bulkSize, elasticNamespace, elasticClientOpts}: ElasticSettings) {
         this.client = new Client(elasticClientOpts);
         this.namespace = elasticNamespace;
-        this.interval = setInterval((): void => {
-            void this.sendBulkRequest([...this.operations]); // eslint-disable-line no-void
-            this.operations = [];
-        }, elasticRotationIntervalMs);
+        this.cargo = async.cargo(this.sendBulkRequest, bulkSize);
         logger.verbose(`ElasticConnector: built connection using ${JSON.stringify(elasticClientOpts)}`);
+    }
+
+    public pruneQueue(): void {
+        this.cargo.kill();
     }
 
     public async createIndexIfNotExists(indexName: string, {mappings, settings}: Mapping): Promise<this> {
@@ -204,22 +203,24 @@ class ElasticManager {
     public insertDoc(data: MongoUpdateParams): void {
         const {indexName, _id, dateString, doc} = data;
         if(!doc) return;
-        this.operations.push({
-            index: {
-                _index: indexName,
-                _id,
-                version: versioning.getVersionAsInteger(new Date(dateString)),
-                version_type: 'external'
-            }
-        });
-        this.operations.push(doc);
+        this.cargo.push([
+            {
+                index: {
+                    _index: indexName,
+                    _id,
+                    version: versioning.getVersionAsInteger(new Date(dateString)),
+                    version_type: 'external'
+                }
+            },
+            doc
+        ]);
     }
 
     public async deleteDoc({_id, indexName}: MongoDeleteParams): Promise<void> {
         const existingDoc = await this.getExistingDoc({indexName, _id});
         if(!existingDoc?._version) return;
 
-        this.operations.push({
+        this.cargo.push({
             delete: {
                 _index: indexName,
                 _id,
