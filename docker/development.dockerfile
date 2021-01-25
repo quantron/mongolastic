@@ -6,7 +6,7 @@ WORKDIR /usr/src/app/
 
 COPY . .
 
-RUN npm install
+RUN npm clean-install
 
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.6.0/wait /wait
 RUN chmod +x /wait

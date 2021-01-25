@@ -86,6 +86,7 @@ export type MongoProduct = {
     address: string;
     isExchangePossible: boolean;
     isPack: boolean;
+    isImported: boolean;
     isLuxe: boolean;
     description: string;
     clientId: ObjectId;
@@ -122,6 +123,7 @@ export type ElasticProduct = {
     priceRub: number;
     isLuxe: boolean;
     isExchangePossible: boolean;
+    isImported: boolean;
     supplierId: string;
     categoryId: string;
     subCategoryId: string;
