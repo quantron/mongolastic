@@ -4,5 +4,4 @@ config.ci.json
 config.local.json
 docker-compose*
 Makefile
-package-lock.json
 node_modules

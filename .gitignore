@@ -7,7 +7,6 @@ backend/.generated/androidrx/**
 backend/.generated/kotlin/**
 backend/.generated/iosSwift/**
 *.local.json
-package-lock.json
 build/
 webpack-assets.json
 .happypack
