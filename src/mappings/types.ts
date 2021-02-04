@@ -63,11 +63,8 @@ export type MongoAttribute = {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 export type ProductAttribute = {
-    attributeId: ObjectId | string;
-    attributeName: string;
-    attributeType: string;
-    attributeValue: string;
-    attributeDisplayValue: string;
+    _id: ObjectId | string;
+    valueId: ObjectId | string;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -114,7 +111,6 @@ export type ElasticProduct = {
     name: string;
     description: string;
     attributes: ProductAttribute[];
-    search: string;
     status: string;
     cityId: string;
     areaId: string;
@@ -135,6 +131,8 @@ export type ElasticProduct = {
 type CategoryAttribute = {
     attributeId: ObjectId | string;
     isRequired: boolean;
+    isMultiSelect: boolean;
+    valueIds: ObjectId[] | string[];
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -142,10 +140,10 @@ export type MongoCategory = {
     _id: ObjectId;
     isVisible: boolean;
     isTop: boolean;
-    attributes: CategoryAttribute[];
     name: string;
     parentId: ObjectId;
     order: string;
+    attributes: CategoryAttribute[],
     description: string;
     imageType: string;
     imageSize: number;
@@ -158,11 +156,11 @@ export type MongoCategory = {
 export type ElasticCategory = {
     isVisible: boolean;
     isTop: boolean;
-    attributes: CategoryAttribute[];
     name: string;
     fullName: string;
     parentId: string;
     order: string;
+    attributes: CategoryAttribute[],
     description: string;
     imageType: string;
     imageSize: number;
