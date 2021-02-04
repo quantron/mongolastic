@@ -9,10 +9,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-import _ from 'lodash';
-import fp from 'lodash/fp';
 import {Collection} from 'mongodb';
-import {translitEnRu} from '../b12/translit';
 import {MongoProduct, ElasticProduct} from './types';
 import {charFilter, filters, analyzers} from './configuration';
 
@@ -32,16 +29,9 @@ const productProperties = {
     attributes: {
         type: 'nested',
         properties: {
-            attributeId: {type: 'keyword'},
-            attributeValue: {type: 'keyword'},
-            attributeName: {type: 'keyword'},
-            attributeType: {type: 'keyword'},
-            attributeDisplayValue: {type: 'text', analyzer: 'russianSimple'}
+            _id: {type: 'keyword'},
+            valueId: {type: 'keyword'}
         }
-    },
-    search: {
-        type: 'text',
-        analyzer: 'russianSimple'
     },
     status: {type: 'keyword'},
     cityId: {type: 'keyword'},
@@ -64,42 +54,25 @@ const transformFunc = (
     product: MongoProduct,
     collection: Collection<MongoProduct>,
     callback: (error: Error | null, elasticDoc?: ElasticProduct) => void
-): void => {
-    const isLatin = (str: string) => /['a-z']/i.test(_.toLower(str));
-
-    const attributes = _.flatMap(product.attributes, ({attributeType, attributeDisplayValue}) =>
-        (attributeType === 'brand' && isLatin(attributeDisplayValue)
-            ? [attributeDisplayValue, translitEnRu(attributeDisplayValue)]
-            : [attributeDisplayValue]));
-
-    const search = _.flow(
-        ({name}) => [..._.split(name, /[ ,.]/), ...attributes],
-        fp.compact,
-        fp.join(' '),
-        fp.lowerCase
-    )(product);
-
-    return callback(null, {
-        name: product.name,
-        description: product.description,
-        attributes: product.attributes,
-        search,
-        status: product.status,
-        cityId: product.cityId.toString(),
-        areaId: product.areaId.toString(),
-        condition: product.condition,
-        clientId: product.clientId.toString(),
-        priceRub: product.priceRub,
-        isLuxe: product.isLuxe,
-        isExchangePossible: product.isExchangePossible,
-        isImported: product.isImported,
-        supplierId: product.supplierId,
-        categoryId: product.categoryId.toString(),
-        subCategoryId: product.subCategoryId.toString(),
-        created: new Date(product.created).toJSON(),
-        modified: new Date(product.modified).toJSON()
-    });
-};
+): void => callback(null, {
+    name: product.name,
+    description: product.description,
+    attributes: product.attributes,
+    status: product.status,
+    cityId: product.cityId.toString(),
+    areaId: product.areaId.toString(),
+    condition: product.condition,
+    clientId: product.clientId.toString(),
+    priceRub: product.priceRub,
+    isLuxe: product.isLuxe,
+    isExchangePossible: product.isExchangePossible,
+    isImported: product.isImported,
+    supplierId: product.supplierId,
+    categoryId: product.categoryId.toString(),
+    subCategoryId: product.subCategoryId.toString(),
+    created: new Date(product.created).toJSON(),
+    modified: new Date(product.modified).toJSON()
+});
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 export default {

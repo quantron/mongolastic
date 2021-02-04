@@ -112,11 +112,8 @@ export default (): MongoProduct[] => [
         subCategoryId: new ObjectId(),
         attributes: [
             {
-                attributeId: new ObjectId(),
-                attributeName: 'Пол',
-                attributeType: 'gender',
-                attributeValue: 'Для мальчика',
-                attributeDisplayValue: 'Для мальчика'
+                _id: new ObjectId(),
+                valueId: new ObjectId()
             }
         ],
         photoIds: [
@@ -162,18 +159,12 @@ export default (): MongoProduct[] => [
         subCategoryId: new ObjectId(),
         attributes: [
             {
-                attributeId: new ObjectId(),
-                attributeName: 'Пол',
-                attributeType: 'gender',
-                attributeValue: 'Для девочки',
-                attributeDisplayValue: 'Для девочки'
+                _id: new ObjectId(),
+                valueId: new ObjectId()
             },
             {
-                attributeId: new ObjectId(),
-                attributeName: 'Цвет',
-                attributeType: 'color',
-                attributeValue: '#0D5839',
-                attributeDisplayValue: 'Зеленый'
+                _id: new ObjectId(),
+                valueId: new ObjectId()
             }
         ],
         photoIds: [new ObjectId()],
@@ -212,18 +203,12 @@ export default (): MongoProduct[] => [
         subCategoryId: new ObjectId(),
         attributes: [
             {
-                attributeId: new ObjectId(),
-                attributeName: 'Цвет',
-                attributeType: 'color',
-                attributeValue: '#234F83',
-                attributeDisplayValue: 'Синий'
+                _id: new ObjectId(),
+                valueId: new ObjectId()
             },
             {
-                attributeId: new ObjectId(),
-                attributeName: 'Пол',
-                attributeType: 'gender',
-                attributeValue: 'Для девочки',
-                attributeDisplayValue: 'Для девочки'
+                _id: new ObjectId(),
+                valueId: new ObjectId()
             }
         ],
         photoIds: [new ObjectId()],
@@ -262,18 +247,12 @@ export default (): MongoProduct[] => [
         subCategoryId: new ObjectId(),
         attributes: [
             {
-                attributeId: new ObjectId(),
-                attributeName: 'Цвет',
-                attributeType: 'color',
-                attributeValue: '#61020B',
-                attributeDisplayValue: 'Бордовый'
+                _id: new ObjectId(),
+                valueId: new ObjectId()
             },
             {
-                attributeId: new ObjectId(),
-                attributeName: 'Пол',
-                attributeType: 'gender',
-                attributeValue: 'Для девочки',
-                attributeDisplayValue: 'Для девочки'
+                _id: new ObjectId(),
+                valueId: new ObjectId()
             }
         ],
         photoIds: [new ObjectId()],
@@ -312,18 +291,12 @@ export default (): MongoProduct[] => [
         subCategoryId: new ObjectId(),
         attributes: [
             {
-                attributeId: new ObjectId(),
-                attributeName: 'Цвет',
-                attributeType: 'color',
-                attributeValue: '#234F83',
-                attributeDisplayValue: 'Синий'
+                _id: new ObjectId(),
+                valueId: new ObjectId()
             },
             {
-                attributeId: new ObjectId(),
-                attributeName: 'Пол',
-                attributeType: 'gender',
-                attributeValue: 'Для девочки',
-                attributeDisplayValue: 'Для девочки'
+                _id: new ObjectId(),
+                valueId: new ObjectId()
             }
         ],
         photoIds: [
@@ -404,18 +377,12 @@ export default (): MongoProduct[] => [
         subCategoryId: new ObjectId(),
         attributes: [
             {
-                attributeId: new ObjectId(),
-                attributeName: 'Цвет',
-                attributeType: 'color',
-                attributeValue: '#234F83',
-                attributeDisplayValue: 'Синий'
+                _id: new ObjectId(),
+                valueId: new ObjectId()
             },
             {
-                attributeId: new ObjectId(),
-                attributeName: 'Пол',
-                attributeType: 'gender',
-                attributeValue: 'Для мальчика',
-                attributeDisplayValue: 'Для мальчика'
+                _id: new ObjectId(),
+                valueId: new ObjectId()
             }
         ],
         photoIds: [new ObjectId()],
@@ -454,18 +421,12 @@ export default (): MongoProduct[] => [
         subCategoryId: new ObjectId(),
         attributes: [
             {
-                attributeId: new ObjectId(),
-                attributeName: 'Цвет',
-                attributeType: 'color',
-                attributeValue: '#787D80',
-                attributeDisplayValue: 'Серый'
+                _id: new ObjectId(),
+                valueId: new ObjectId()
             },
             {
-                attributeId: new ObjectId(),
-                attributeName: 'Пол',
-                attributeType: 'gender',
-                attributeValue: 'Для девочки',
-                attributeDisplayValue: 'Для девочки'
+                _id: new ObjectId(),
+                valueId: new ObjectId()
             }
         ],
         photoIds: [new ObjectId()],
@@ -504,18 +465,12 @@ export default (): MongoProduct[] => [
         subCategoryId: new ObjectId(),
         attributes: [
             {
-                attributeId: new ObjectId(),
-                attributeName: 'Цвет',
-                attributeType: 'color',
-                attributeValue: '#234F83',
-                attributeDisplayValue: 'Синий'
+                _id: new ObjectId(),
+                valueId: new ObjectId()
             },
             {
-                attributeId: new ObjectId(),
-                attributeName: 'Пол',
-                attributeType: 'gender',
-                attributeValue: 'Для девочки',
-                attributeDisplayValue: 'Для девочки'
+                _id: new ObjectId(),
+                valueId: new ObjectId()
             }
         ],
         photoIds: [new ObjectId()],

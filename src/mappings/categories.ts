@@ -27,7 +27,9 @@ const categoryProperties = {
         type: 'nested',
         properties: {
             attributeId: {type: 'keyword'},
-            isRequired: {type: 'boolean'}
+            isRequired: {type: 'boolean'},
+            isMultiSelect: {type: 'boolean'},
+            valueIds: {type: 'keyword'} // https://www.elastic.co/guide/en/elasticsearch/reference/current/array.html
         }
     },
     parentId: {type: 'keyword'},
